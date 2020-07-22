@@ -79,6 +79,7 @@ class Blockchain{
 	}
 
 	minePendingTransactions(miningRewardAddress) {
+		if (addressVal(miningRewardAddress)=== 1) {
 		// Create new block with all pending transactions and mine it..
 		let block = new Block(Date.now(), this.pendingTransactions);
 		block.mineBlock(this.difficulty);
@@ -86,6 +87,9 @@ class Blockchain{
 		this.chain.push(block);
 		// Reset the pending transactions and send the mining reward
 		this.pendingTransactions = [new Transaction(null, miningRewardAddress, this.miningReward, null)];
+		} else {
+			console.log('Invalid miner address.')
+		}
 	}
 
 	isChainValid() {
@@ -103,22 +107,26 @@ class Blockchain{
 	}
 
 	getBalanceOfAddress(address){
-		let balance = 0; // you start at zero!
-		// Loop over each block and each transaction inside the block
-		for(const block of this.chain){
-			for(const trans of block.transactionData){
-				// If the given address is the sender -> reduce the balance
-				if(trans.fromAddress === address){
-					balance -= trans.amount;
-				}
-				// If the given address is the receiver -> increase the balance
-				if(trans.toAddress === address){
-					balance += trans.amount;
+		// Perform address validation.
+		if(addressVal(address)=== 1) {
+			let balance = 0; 
+			// Loop over each block and each transaction inside the block
+			for(const block of this.chain){
+				for(const trans of block.transactionData){
+					// If the given address is the sender -> reduce the balance
+					if(trans.fromAddress === address){
+						balance -= trans.amount;
+					}
+					// If the given address is the receiver -> increase the balance
+					if(trans.toAddress === address){
+						balance += trans.amount;
+					}
 				}
 			}
+			return balance;
+		} else {
+			return -1
 		}
-	
-		return balance;
 	}
 }
 
@@ -315,7 +323,7 @@ function addressVal(address){
 // Helper functions end.
 
 // Main execution begins. 
-let swustBC = new Blockchain();
+let prvBC = new Blockchain();
 // Needed params.
 let ring = []
 // Value 1 as Identity value for multiplication.
@@ -351,24 +359,29 @@ if (userTransData != 0){
 		console.log("Signature verification successful. Adding transaction to blockchain.")
 		console.log("**********************************************************************")
 		// swustBC.createTransaction(new Transaction.transToSign('address1', 'address2', 10, 'SWUST'));
-		swustBC.addTransaction(userTransData)
-	} else {
-		console.log("Failed Signature verification. Rejecting transaction.")
-	}
-	// Testing begins.
-	// Check number of pending transactions and mine them.
-	console.log("Total pending transactions: ", swustBC.pendingTransactions.length)
-	console.log('Starting mining');
-	if (swustBC.pendingTransactions.length > 0){
-		// There exist pending transactions hence mine them.
-		for(i = 0; i < swustBC.pendingTransactions.length; i++){
-		swustBC.minePendingTransactions('addressOfSWuST') // Transactions mined. Block reward would be in next mined block.
+		prvBC.addTransaction(userTransData)
+
+		// Check number of pending transactions and mine them.
+		console.log("Total pending transactions: ", prvBC.pendingTransactions.length)
+		console.log('Starting mining');
+		if (prvBC.pendingTransactions.length > 0){
+			// There exist pending transactions hence mine them.
+			for(i = 0; i < prvBC.pendingTransactions.length; i++){
+				prvBC.minePendingTransactions('0x34567') // Transactions mined. Block reward would be in next mined block.
+			}
+			prvBC.minePendingTransactions('0x34567') // Mine again to claim reward.
 		}
-		swustBC.minePendingTransactions('addressOfSWuST') // Mine again to claim reward.
-	}
-	console.log('Balance check of SWUST address is', swustBC.getBalanceOfAddress('addressOfSWuST'));
-	// Testing ends.
-	// Main execution ends.
+		// Check balance.
+		let userAccBal = prvBC.getBalanceOfAddress('0x34567')
+		if (userAccBal >= 0) {
+			console.log('Balance check of miner address is', prvBC.getBalanceOfAddress('0x34567'));
+		} else {
+			console.log('Sorry! Invalid miner address format.');
+		}
+	} else {
+			console.log("Failed Signature verification. Rejecting transaction.")
+		}
+		// Main execution ends.
 } else {
-	console.log('Sorry! Invalid transaction. Transaction aborted.')
-}
+		console.log('Sorry! Invalid transaction. Transaction aborted.')
+	}
