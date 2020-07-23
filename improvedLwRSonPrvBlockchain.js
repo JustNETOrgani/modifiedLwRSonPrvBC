@@ -2,7 +2,8 @@
 const cryptoJS = require("crypto-js")
 const SHA256 = cryptoJS.SHA256
 const BigNumber = require("./bignumber")  
-const jsSHA = require("./jssha")            
+const jsSHA = require("./jssha")
+const { MerkleTree } = require('merkletreejs')         
 
 class Transaction {
 	constructor (fromAddress, toAddress, amount, tData) {
@@ -348,7 +349,10 @@ uRawTransactions.push(uTransactionOne, uTransactionTwo)
 for(i=0; i<uRawTransactions.length; i++){
 	userTransDataToSign[i] = uRawTransactions[i].transToSign()
 }
-
+// Build merkle tree of the two transactions.
+const leaves = userTransDataToSign.map(x => SHA256(x))
+const mTree = new MerkleTree(leaves, SHA256)
+const mRoot = mTree.getRoot().toString('hex')
 console.log('Total user transactions:', userTransDataToSign.length)
 for(var i=0; i<userTransDataToSign.length; i++){
 	if (userTransDataToSign[i] != 0){
@@ -369,7 +373,7 @@ for(var i=0; i<userTransDataToSign.length; i++){
 			console.log("Signature verification successful. Adding transaction to blockchain.")
 			console.log("**********************************************************************")
 			// Add transaction to the blockchain.
-			let transObj = [{Transaction: userTransDataToSign[i], LwRS: signature}]
+			let transObj = [{Transaction: userTransDataToSign[i], MerkleRoot: mRoot, LwRS: signature}]
 			prvBC.addTransaction(transObj)
 
 			// Check number of pending transactions and mine them.
