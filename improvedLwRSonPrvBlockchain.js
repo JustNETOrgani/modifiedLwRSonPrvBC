@@ -15,7 +15,7 @@ class Transaction {
 	transToSign(){
 		if(addressVal(this.fromAddress)===1 && addressVal(this.toAddress)===1){
 			if(this.amount >= 1 & this.tData.length >=1){
-				return this.fromAddress + this.amount + this.tData + this.toAddress
+				return JSON.stringify({From: this.fromAddress, Amount: this.amount, Data: this.tData, To: this.toAddress})
 			} else {
 				return 0
 			}
@@ -26,7 +26,8 @@ class Transaction {
 }
 
 class Block {
-	constructor(timestamp, transactionData, previousHash = '') {
+	constructor(index, timestamp, transactionData, previousHash) {
+		this.index = index;
         this.previousHash = previousHash;
         this.timestamp = timestamp;
         this.transactionData = transactionData;
@@ -35,7 +36,7 @@ class Block {
     }
 
 	calculateHash() {
-		return SHA256(this.previousHash + this.timestamp + JSON.stringify(this.transactionData) + this.nonce).toString();
+		return SHA256(this.index + this.previousHash + this.timestamp + JSON.stringify(this.transactionData) + this.nonce).toString();
 	}
 
 	mineBlock(difficulty) {
@@ -60,16 +61,15 @@ class Blockchain{
 		var month = currentTime.getMonth() + 1
 		var day = currentTime.getDate()
 		var year = currentTime.getFullYear()
-		return month + "/" + day + "/" + year
+		return day + "/" + month + "/" + year
 	}
 
 	createGenesisBlock() {
-        let currentDate = this.getCurrentDate()
-		return new Block(0, currentDate, "Genesis Block", "0");
+		return new Block(0, this.getCurrentDate(), "Genesis Block", "0");
 	}
 
 	getLatestBlock() {
-		return this.chain[this.chain.length - 1];
+		return this.chain[this.chain.length -1];
 	}
 
 	addTransaction(transaction) {
@@ -81,7 +81,7 @@ class Blockchain{
 	minePendingTransactions(miningRewardAddress) {
 		if (addressVal(miningRewardAddress)=== 1) {
 		// Create new block with all pending transactions and mine it..
-		let block = new Block(Date.now(), this.pendingTransactions);
+		let block = new Block(this.getLatestBlock().index + 1, this.getCurrentDate(), this.pendingTransactions, this.getLatestBlock().hash);
 		block.mineBlock(this.difficulty);
 		// Add the newly mined block to the chain
 		this.chain.push(block);
@@ -158,11 +158,11 @@ class signTransaction {
 		}
 		if(j === null) throw "j not found."
 
-		console.log(`found signer j === ${j}`)
+		// console.log(`found signer j === ${j}`)
 		//
 		let h = getHashI(buildLmIDeventData(this.L, this.message, this.IDevent), this.L[0])
 
-		console.log(`get h === ${h}`)
+		// console.log(`get h === ${h}`)
 
 		// Generate random numbers.
 		let x = []
@@ -170,7 +170,7 @@ class signTransaction {
 			x[i] = getRandomFromN(this.L[i])
 		}
 
-		console.log(`init random xArr === ${x.join()}`)
+		// console.log(`init random xArr === ${x.join()}`)
 
 		// A stronger Key Image computation to withstand double spending tendency.
 		let k = '' // Commitment.
@@ -180,7 +180,7 @@ class signTransaction {
 		let I = Math.sqrt(getQRHash(buildpjNjIDeventData(k, this.user.N, this.IDevent), this.user.N)) % this.user.N
 		console.log("********************************")
 		console.log(`The Stronger key image I is === ${I}`)
-		console.log("*******************************************************")
+		// console.log("*******************************************************")
 
 		let c = []
 		//c Computation.
@@ -202,9 +202,9 @@ class signTransaction {
 		}
 
 		x[j] = Math.sqrt(ti)
-		console.log(`get cArr === ${c.join()}`)
-		console.log(`get xArr === ${x.join()}`)
-		console.log(c[0])
+		// console.log(`get cArr === ${c.join()}`)
+		// console.log(`get xArr === ${x.join()}`)
+		// console.log(c[0])
 		return {I, c1: c[0], x: x}
 	}
 }
@@ -220,13 +220,13 @@ class verifySig {
 	verify(){
 		//h = H1(L||m||IDevent)
 		let h = getHashI(buildLmIDeventData(this.L, this.message, this.IDevent), this.L[0])
-		console.log(`get h === ${h}`)
+		// console.log(`get h === ${h}`)
 	
 		let x = this.sign.x
 		let c1 = this.sign.c1
 		let I = this.sign.I
-		console.log(`get xArr === ${x.join()}`)
-		console.log(c1)
+		// console.log(`get xArr === ${x.join()}`)
+		// console.log(c1)
 	
 		let r = []
 		let c = []
@@ -236,10 +236,10 @@ class verifySig {
 			c[i] = getHashI(buildhrjData(h, r[i - 1]), this.L[i])
 			r[i] = getMod(c[i] * I + x[i] * x[i], this.L[i])
 		}
-		console.log(`get cArr === ${c.join()}`)
-		console.log(`get rArr === ${r.join()}`)
+		// console.log(`get cArr === ${c.join()}`)
+		// console.log(`get rArr === ${r.join()}`)
 		c1 = getHashI(buildhrjData(h, r[this.L.length - 1]), this.L[0])
-		console.log(`c1 : ${c1} <===>  c[0]: ${c[0]}`)
+		// console.log(`c1 : ${c1} <===>  c[0]: ${c[0]}`)
 		if(c1 === c[0]){
 			return 1
 		} else {
@@ -324,6 +324,7 @@ function addressVal(address){
 
 // Main execution begins. 
 let prvBC = new Blockchain();
+// console.log('Block inspection on instantiation:', prvBC.chain)
 // Needed params.
 let ring = []
 // Value 1 as Identity value for multiplication.
@@ -335,53 +336,80 @@ ring.push(new userKey(0x935228b20bdc2349389ade14548ad5542bb16a2df7f3f2e4c293c033
 // Public key computation and Public Key list for Ring members.
 L = ring.map(user => user.N)
 let IDevent = 1
-console.log('Attempting to creat a transaction...');
-let uTransaction = new Transaction('0x12345', '0x23456', 10, 'SWUST')
-let userTransData = uTransaction.transToSign()
-let message = userTransData
 
-if (userTransData != 0){
-	// Sign transaction.
-	console.log('Attempting to sign transaction.')
-	let signInstance = new signTransaction(ring[0], L, message, IDevent)
-	let signature = signInstance.genSignature()
-	console.log("**********************************************************************")
-	console.log("Ring Signature generated for improved scheme is: ", signature)
-	console.log("**********************************************************************")
-	// Verify signature is valid.
-	console.log("verifying signature ===================")
-	let verifyInstance  = new verifySig(signature, L, message, IDevent)
-	let verifySigResult = verifyInstance.verify()
-	// console.log('Verification result: ', verifySigResult)
-	if (verifySigResult === 1){
-		// Add transaction to the blockchain.
-		console.log("**********************************************************************")
-		console.log("Signature verification successful. Adding transaction to blockchain.")
-		console.log("**********************************************************************")
-		// swustBC.createTransaction(new Transaction.transToSign('address1', 'address2', 10, 'SWUST'));
-		prvBC.addTransaction(userTransData)
+let uRawTransactions = []
+let userTransDataToSign = []
+let uTransactionOne = new Transaction('0x1234a', '0x2345a', 10, 'LabTest1')
+let uTransactionTwo = new Transaction('0x1234a', '0x2345b', 15, 'LabTest2')
+// let uTransactionThree = new Transaction('0x1234a', '0x2345c', 25, 'LabTest3')
 
-		// Check number of pending transactions and mine them.
-		console.log("Total pending transactions: ", prvBC.pendingTransactions.length)
-		console.log('Starting mining');
-		if (prvBC.pendingTransactions.length > 0){
-			// There exist pending transactions hence mine them.
-			for(i = 0; i < prvBC.pendingTransactions.length; i++){
-				prvBC.minePendingTransactions('0x34567') // Transactions mined. Block reward would be in next mined block.
+uRawTransactions.push(uTransactionOne, uTransactionTwo)
+
+for(i=0; i<uRawTransactions.length; i++){
+	userTransDataToSign[i] = uRawTransactions[i].transToSign()
+}
+
+console.log('Total user transactions:', userTransDataToSign.length)
+for(var i=0; i<userTransDataToSign.length; i++){
+	if (userTransDataToSign[i] != 0){
+		// Sign transaction.
+		console.log('Attempting to sign transaction No.:', i+1)
+		let signInstance = new signTransaction(ring[0], L, userTransDataToSign[i], IDevent)
+		let signature = signInstance.genSignature()
+		console.log("**********************************************************************")
+		console.log("Ring Signature generated for modified scheme is: ", signature)
+		console.log("**********************************************************************")
+		// Verify signature is valid.
+		// console.log("verifying signature ===================")
+		let verifyInstance  = new verifySig(signature, L, userTransDataToSign[i], IDevent)
+		let verifySigResult = verifyInstance.verify()
+		// console.log('Verification result: ', verifySigResult)
+		if (verifySigResult === 1){
+			// Display verification success message.
+			console.log("Signature verification successful. Adding transaction to blockchain.")
+			console.log("**********************************************************************")
+			// Add transaction to the blockchain.
+			let transObj = [{Transaction: userTransDataToSign[i], LwRS: signature}]
+			prvBC.addTransaction(transObj)
+
+			// Check number of pending transactions and mine them.
+			// console.log("Total pending transactions: ", prvBC.pendingTransactions.length)
+			// console.log('Starting mining');
+			if (prvBC.pendingTransactions.length > 0){
+				// There exist pending transactions hence mine them.
+				for(var x = 0; x < prvBC.pendingTransactions.length; x++){
+					prvBC.minePendingTransactions('0x34567') // Transactions mined. Block reward would be in next mined block.
+				}
+				// prvBC.minePendingTransactions('0x34567') // Mine again to claim reward.
+			} else {
+				console.log('No pending transaction(s) found.')
 			}
-			prvBC.minePendingTransactions('0x34567') // Mine again to claim reward.
-		}
-		// Check balance.
-		let userAccBal = prvBC.getBalanceOfAddress('0x34567')
-		if (userAccBal >= 0) {
-			console.log('Balance check of miner address is', prvBC.getBalanceOfAddress('0x34567'));
 		} else {
-			console.log('Sorry! Invalid miner address format.');
-		}
+				console.log("Failed Signature verification. Rejecting transaction.")
+			}
+			// Main execution ends.
 	} else {
-			console.log("Failed Signature verification. Rejecting transaction.")
+			console.log('Sorry! Invalid transaction. Transaction aborted.')
 		}
-		// Main execution ends.
-} else {
-		console.log('Sorry! Invalid transaction. Transaction aborted.')
-	}
+}
+// Check balance.
+// let userAccBal = prvBC.getBalanceOfAddress('0x34567')
+// if (userAccBal >= 0) {
+	// console.log('Balance check of miner address is', prvBC.getBalanceOfAddress('0x34567'));
+// } else {
+	// console.log('Sorry! Invalid miner address format.');
+// }
+// Testing tamper proof nature begins.
+// Check if chain is valid.
+console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
+
+// Let's now manipulate the data
+prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
+prvBC.chain[0].hash = SHA256(0 + '23/7/2020' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
+// Check our chain again (will now return false)
+// console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid()); // Yes hence outputs false.
+// console.log('Entire chain: ', prvBC.chain[1].transactionData) 
+console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
+console.log('Transaction info: ',prvBC.chain[prvBC.chain.length - 1].transactionData)
+console.log('Signature: ',prvBC.chain[prvBC.chain.length - 1].transactionData.LwRS)
+// Testing tamper proof nature ends.
