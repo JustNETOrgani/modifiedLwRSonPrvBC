@@ -199,7 +199,7 @@ function getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour){
     const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
     Myipfs.on('ready', () => {
         // Resolve the IPNS name or address before data can be retrieved via cat.
-        ipfs.name.resolve(staticIPNShash, function (err, name) 
+        Myipfs.name.resolve(staticIPNShash, function (err, name) 
         {
             if (err){
                         console.log("IPNS name resolution failed.");
@@ -208,7 +208,7 @@ function getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour){
                     console.log("IPFS equivalent hash is: ", name);
                     // Get the data.
 
-                    ipfs.cat(name, function(error, DataFromIPFS){
+                    Myipfs.cat(name.path, function(error, DataFromIPFS){
                     if (error) {
                         //throw error
                         console.log("Invalid hash.")

@@ -239,7 +239,7 @@ function getPubKeysFromIPFSawait(PkOne,userRawPubKey){
     const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
     Myipfs.on('ready', () => {
         // Resolve the IPNS name or address before data can be retrieved via cat.
-        ipfs.name.resolve(staticIPNShash, function (err, name) 
+        Myipfs.name.resolve(staticIPNShash, function (err, name) 
         {
             if (err){
                         console.log("IPNS name resolution failed.");
@@ -248,7 +248,7 @@ function getPubKeysFromIPFSawait(PkOne,userRawPubKey){
                     console.log("IPFS equivalent hash is: ", name);
                     // Get the data.
 
-                    ipfs.cat(name, function(error, DataFromIPFS){
+                    Myipfs.cat(name.path, function(error, DataFromIPFS){
                     if (error) {
                         //throw error
                         console.log("Invalid hash.")
@@ -315,7 +315,7 @@ function getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour){
     const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
     Myipfs.on('ready', () => {
         // Resolve the IPNS name or address before data can be retrieved via cat.
-        ipfs.name.resolve(staticIPNShash, function (err, name) 
+        Myipfs.name.resolve(staticIPNShash, function (err, name) 
         {
             if (err){
                         console.log("IPNS name resolution failed.");
@@ -326,7 +326,7 @@ function getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour){
                     console.log("IPFS equivalent hash is: ", name);
                     // Get the data.
 
-                    ipfs.cat(name, function(error, DataFromIPFS){
+                    Myipfs.cat(name.path, function(error, DataFromIPFS){
                     if (error) {
                         //throw error
                         console.log("Invalid hash.")
@@ -451,7 +451,7 @@ function pushToIPFS(BytesString,newPubKeyToAdd){
                 const MyBuffer = window.Ipfs.Buffer
 
                 const ipfsPreparedData = MyBuffer.from(encryptedPubKeyBankForIPFS)
-                ipfs.add(ipfsPreparedData, function(error, result){
+                Myipfs.add(ipfsPreparedData, function(error, result){
                     if (error || !result) {
                         console.log("IPFS Error!");
                         }

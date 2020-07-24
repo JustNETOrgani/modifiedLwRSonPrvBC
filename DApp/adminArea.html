@@ -98,7 +98,7 @@ function runIPFScode(){
                         const MyBuffer = window.Ipfs.Buffer
 
                         const ipfsPreparedData = MyBuffer.from(encryptedPubKey)
-                        ipfs.add(ipfsPreparedData, function(error, result){
+                        Myipfs.add(ipfsPreparedData, function(error, result){
                             if (error || !result) {
                                 console.log("IPFS Error!");
                                 $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
@@ -133,7 +133,7 @@ async function publishToIPNS(returnedHash){
     const Myipfs   = new window.Ipfs()
     const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
         Myipfs.on('ready', () => {
-        ipfs.name.publish(returnedHash, function(error, result){
+            Myipfs.name.publish(returnedHash, function(error, result){
         if (error || !result) 
             {
                 console.log("IPFS Error!");
