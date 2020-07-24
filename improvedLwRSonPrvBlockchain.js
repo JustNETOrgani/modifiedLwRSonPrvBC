@@ -426,14 +426,16 @@ for(var i=0; i<userTransDataToSign.length; i++){
 console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
 
 // Let's now manipulate the data
-// prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
-// prvBC.chain[0].hash = SHA256(0 + '23/7/2020' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
-// Check our chain again (will now return false)
-// console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid()); // Yes hence outputs false.
+prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
+prvBC.chain[0].hash = SHA256(1 + '24/7/2020::17:15:40' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
+// Display information about the blockchain.
 console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
 console.log('Entire block:', prvBC.chain[prvBC.chain.length - 1].transactionData)
-if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block') {
+if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block' && prvBC.chain[prvBC.chain.length - 1].transactionData !== '0x1234510LabTest0x23456') {
 	// console.log('Merkle root: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].MerkleRoot)
 	console.log('Tx1: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].BlockBody.Tx1)
+	console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid() + ': Because of tamper-proof nature.'); // No. hence it outputs false since other blocks have been added. Tamper proof. 
+} else {
+	console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid() + ' : Only one block exist hence not tamper-proof.'); // Yes hence outputs True since only one the genesis block exist.
 }
 // Testing tamper proof nature ends.
