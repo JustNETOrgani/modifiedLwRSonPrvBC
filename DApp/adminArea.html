@@ -1,0 +1,154 @@
+<html>
+    <body>
+        <head>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+            <script src="https://unpkg.com/ipfs@0.35.0/dist/index.min.js"></script>
+            <script src="https://unpkg.com/ipfs-http-client/dist/index.min.js"></script>
+
+            <link rel="stylesheet" type="text/css" href="styles/adminStyles.css">
+            <title>Admin Panel</title>
+        </head>  
+                <div id="top">
+                    <div id="imgHolder"><img id="appImg" src="imgs/zkpImg.png" alt="zkpImg" title="App Image"/></div>
+                    <div id="appTitleHolder">
+                        <p id="appHeadingOne">Non-interactive Zero Knowledge Proofs (NIZKP)</p>
+                        <p id="appHeadingTwo">System Admin.</p>
+                    </div>
+                </div>
+
+                 <div id="middleWrapper">
+                     <div class="userEntries">
+
+                        <div id="inputSection">
+
+                            <div class="control-group">
+                                <input type="text" class="dataSection" value="" placeholder="Enter Public Key to be sent to IPFS" id="pubKey">
+                            </div>
+                            
+                                <button onclick="runIPFScode()" class="btn btn-primary btn-large btn-block">Push to IPFS</button>
+
+                                <strong></strong><p class="success" id="showNhideSuccess"></strong></p>
+                                
+                                <strong></strong><p class="error" id="showNhideError"></strong></p>        
+                        </div>
+
+                     </div>
+                 </div>
+
+                 <div id="bottomDIV" style="overflow-x:auto">
+                    <p id="pubKeysZoneHeading">IPNS returned hash</p>
+                    <table>
+                        <thread>
+                            <tbody>
+
+                            </tbody>
+                        </thread>
+                    </table>
+                </div>
+    </body>
+
+<script type="text/javascript" src="js/jquery321.js"></script>
+
+<script>
+    var adminPassCode = 123456;
+    var enteredPassCode = prompt("Please enter admin passcode.", '');
+    if(adminPassCode==enteredPassCode){
+        console.log("Welcome, Admin.")
+    }
+    else{
+        window.location.href = "./indexToNIZKP.html";
+    }
+
+function reloadPg(){
+        window.setTimeout(function(){
+                            window.location.href = "./adminArea.html";
+                        },1500); // Refresh after 1.5 sec.
+    }
+
+function inputValidation(input) {
+        let count = input.toString().length;
+        if(input=='' || Number(input)==NaN || parseInt(input,16)==NaN || input<0 || isNaN(input)==true || count <=64){
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }
+
+function runIPFScode(){
+        console.log("Btn clicked.")
+        var hashedPubkey   = $("#pubKey").val();
+
+        if(inputValidation(hashedPubkey)==1){
+
+            // Data encryption begins.
+            const pubKeyJSONstr = JSON.stringify({key1:hashedPubkey}) // Without JSON.stringfy, error is thrown at encryption stage.
+            
+            // Setting the key for encryption.
+            //var secretKey = prompt("Please enter Data Encryption key. Keep it safe.", );
+            var secretKey = 'nizkP?2019SWUSTblockchain_Lab112'
+
+            var encryptedPubKey  = CryptoJS.AES.encrypt(pubKeyJSONstr, secretKey).toString();
+            console.log("Encrypted Public Key data: ", encryptedPubKey)
+            // Data encryption ends here.
+            // Send to IPFS.
+            const Myipfs    = new window.Ipfs()
+            const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
+                    Myipfs.on('ready', () => {
+                        const MyBuffer = window.Ipfs.Buffer
+
+                        const ipfsPreparedData = MyBuffer.from(encryptedPubKey)
+                        ipfs.add(ipfsPreparedData, function(error, result){
+                            if (error || !result) {
+                                console.log("IPFS Error!");
+                                $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                document.getElementById("showNhideError").innerHTML = "Error with IPFS."
+                                }
+                            else {
+                                    var ipfsHash = result;
+                                    console.log("IPFS Success!");
+                                    console.log("IPNS Hash is:",ipfsHash)
+
+                                    // Publish new hash to IPNS.
+
+                                    // Get Hash content from IPFS returned array.
+                                    var returnedHash = ipfsHash[0].hash // This can be accessed on "https://ipfs.io/ipfs/returnedHash"
+                                    console.log("Returned hash is:",returnedHash)
+                                    // Call function to publish the returned IPFS hash to IPNS.
+                                    publishToIPNS(returnedHash);
+                                }
+                        })
+                    }
+                )
+            }
+            else{
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                    document.getElementById("showNhideError").innerHTML = "Invalid input."
+                    reloadPg();
+            }
+    }
+
+async function publishToIPNS(returnedHash){
+    console.log("IPNS function activated.")
+    const Myipfs   = new window.Ipfs()
+    const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
+        Myipfs.on('ready', () => {
+        ipfs.name.publish(returnedHash, function(error, result){
+        if (error || !result) 
+            {
+                console.log("IPFS Error!");
+                $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                document.getElementById("showNhideError").innerHTML = "Error publishing to IPNS."
+                }
+        else {
+                console.log("IPNS Success!");
+                let ipnsHash = result.name;  // This should be same as Peer ID. All users must point to this. 
+                console.log("IPNS address is:",ipnsHash)
+                $("#bottomDIV").show(); // Display the hidden div to accept the comming entries.
+                $('tbody').append('<tr><td>'+ ipnsHash +'</td></tr>');
+            }
+        })
+    })
+}
+    </script>
+ </html>

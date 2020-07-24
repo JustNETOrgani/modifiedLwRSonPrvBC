@@ -1,0 +1,166 @@
+* {
+    box-sizing: border-box;
+    }
+     
+*:focus {
+    outline: none;
+    }
+
+body {
+    font-family: Arial;
+    background-color: rgb(99, 111, 117);
+    }
+
+#top {  
+        width: 100%;
+        height: 13%;
+        text-align: center;
+        color: #777;
+        margin-top: 1%;
+        }
+
+#imgHolder{width: 15%; height: 85%; float: left; margin-top: 0.5%; margin-left: 3.5%;}
+
+#appImg{
+    border-radius: 10%;
+    width:75%;
+    height: 99%;   /*200%*/
+    margin: 0% 0%;
+    transition: transform .2s; /* Animation */
+}
+
+#appImg:hover{
+    transform: scale(1.1); /* Negative value decreases size.*/
+}
+#appTitleHolder{width: 67%; height: 85%; float: right; margin-right: 10%;}
+    
+#appHeadingOne{
+    color: rgb(94, 4, 53);
+    font-size: 260%;
+    font-family: sans-serif;
+    margin: 1.1% auto;
+}
+
+#appHeadingTwo{
+    color: rgb(80, 33, 59);
+    font-size: 200%;
+    font-family: sans-serif;
+    margin: 0.5% auto;
+    text-decoration-line: underline;
+}
+
+#middleWrapper{
+    width: 72%;
+    height: 20%;
+    margin: 6% auto;
+}
+
+#bottomDIV{
+    width: 60%;
+    height: 31%;
+    margin: 1.5% auto;
+    background-color: #c0ccc6;
+    border-radius: 4%;
+}
+
+#inputSection{
+    margin: -1.5% auto;
+}
+
+.control-group {
+    margin: 0.5% auto;
+    }
+     
+input {
+    text-align: center;
+    background-color: rgb(187, 194, 196);
+    border: 2px solid rgb(247, 242, 247);
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: 200;
+    padding: 10px 0;
+    width: 93%;
+    transition: border .5s;
+    border-radius: 4%;
+    margin: 0.5% auto;
+    }
+     
+input:focus {
+    border: 2px solid rgb(233, 176, 245);
+    box-shadow: none;
+    }
+     
+.btn {
+    border: 2px solid transparent;
+    background: rgb(155, 108, 147);
+    color: #ffffff;
+    font-size: 16px;
+    line-height: 25px;
+    padding: 10px 0;
+    text-decoration: none;
+    text-shadow: none;
+    border-radius: 25%;
+    box-shadow: none;
+    transition: 0.45s;
+    display: block;
+    width: 25%;
+    margin: 3.5% auto;
+    }
+     
+.btn:hover {
+    background-color: rgb(161, 68, 146);
+    }
+
+.userEntries{
+        width: 63%;
+        height: 38%;
+        margin: 2% auto;
+        background-color: rgb(132, 143, 146);
+        border-radius: 1%;
+    }
+
+.dataSection{
+        margin-top: 1%;
+        margin-left: 3.3%;
+    }
+
+#pubKeysZoneHeading{
+    color: rgb(124, 81, 124);
+    font-size: 100%;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    text-align: center;
+    margin-top: 1.2%;
+    text-decoration-line: underline;
+}
+
+#showNhideSuccess{display: none;}
+#showNhideError{display: none;}
+#bottomDIV{display: none;}
+
+table{
+    width: 100%;
+}
+th, td {
+    border-bottom: 1px solid #ddd;
+    padding: 2%;
+    text-align: center;
+  }
+th {
+    height: 7px;
+    background-color: skyblue;
+  }
+td {
+    height: 4px;
+    vertical-align: bottom;
+  }
+
+tr:hover {background-color: #8d979e;}
+tr:nth-child(even) {background-color: #f2f2f2;}
+
+    
+.success { background: #8ab19c; padding: 3pt; color: rgb(178, 43, 185); text-align: center;}
+.error { padding: 3pt; color: rgb(102, 43, 25); text-align: center; font-size: 120%;}
+
+#contentBelow{
+        width: 100%;
+    }

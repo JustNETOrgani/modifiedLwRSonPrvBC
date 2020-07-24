@@ -1,0 +1,304 @@
+<html>
+    <body>
+        <head>
+            <script src="https://cdn.jsdelivr.net/gh/ethereum/web3.js@1.0.0-beta.34/dist/web3.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+            <script src="https://unpkg.com/ipfs@0.35.0/dist/index.min.js"></script>
+            <script src="https://unpkg.com/ipfs-http-client/dist/index.min.js"></script>
+            <link rel="stylesheet" type="text/css" href="styles/awaitStyles.css">
+            <title>awaitNizkp</title>
+        </head>  
+                <div id="top">
+                    <div id="imgHolder"><img id="appImg" src="imgs/zkpImg.png" alt="zkpImg" title="App Image"/></div>
+                    <div id="appTitleHolder">
+                        <p id="appHeadingOne">Non-interactive Zero Knowledge Proofs (NIZKP)</p>
+                        <p id="appHeadingTwo">Awaiting Users</p>
+                    </div>
+                </div>
+
+                 <div id="middleWrapper">
+                     <div class="userEntries">
+
+                        <div id="inputSection">
+
+                            <div class="control-group">
+                                <input type="text" class="dataSection" value="" placeholder="Enter Public Key" id="pubKey">
+                            </div>
+                            
+                                <button onclick="verify()" class="btn btn-primary btn-large btn-block">Confirm and Get Public Keys</button>
+
+                                <strong></strong><p class="success" id="showNhideSuccess"></strong></p>
+                                
+                                <strong></strong><p class="error" id="showNhideError"></strong></p>        
+                        </div>
+
+                     </div>
+                 </div>
+
+                 <div id="bottomDIV" style="overflow-x:auto">
+                    <p id="pubKeysZoneHeading">Retrieved Public Keys from Contract</p>
+                    <table>
+                        <thread>
+                            <tbody>
+
+                            </tbody>
+                        </thread>
+                    </table>
+                 </div>
+     </body>
+
+<script type="text/javascript" src="js/jquery321.js"></script>
+<script type="text/javascript" src="js/contractABI.js"></script>
+
+<script>
+    
+    if (typeof web3 !== 'undefined')
+    {
+        web3 = new Web3(web3.currentProvider);
+    }
+else
+    {   
+        // set the provider you want from Web3.providers
+        web3 = new Web3(new Web3.providers.HttpProvider("http://localhost:8545")); // This node address should be same for Ganache.
+        // var provider = new ethers.providers.JsonRpcProvider('http://127.0.0.1:7545');
+        //web3 = new Web3(new Web3.providers.HttpProvider('https://kovan.infura.io/v3/id'));
+    }
+    web3.eth.getAccounts().then(accounts => {
+        console.log(accounts[0])
+        web3.eth.defaultAccount =accounts[0]
+    });
+    
+    var nizkpContract = new web3.eth.Contract(ABI,contractAddress, {defaultGas: suppliedGas});// End of ABi Code from Remix.
+
+    // Interation with the Blockchain from the web app begins.
+const staticIPNShash = 'QmWaW8qdR9G8jfbtUUDBaW3UzDdedFBKn5VKTuad6h3gGh' // This is Peer ID.
+
+function getHash(input){
+    return web3.utils.soliditySha3(
+        {t: 'uint256', v: input} // t: type and v: value;
+    );
+}
+
+function trackEventMsg(){
+        
+        nizkpContract.getPastEvents('message',{fromBlock: 'latest', toBlock: 'latest'},
+            function(err, results) { 
+                if(err) {
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+					document.getElementById("showNhideError").innerHTML = "There was error.";
+    				return;
+  			}
+  			// Else use the data recieved.
+            for (var {returnValues:{msg: EventMsg}} of results) {
+                console.log('Event Message: ' + EventMsg);   
+                $("#showNhideSuccess").show(); // Display the hidden div to accept the comming entries.
+                document.getElementById("showNhideSuccess").innerHTML = EventMsg;
+                return;
+            }
+
+        });
+    }
+
+function trackEventFailed(){
+        
+        nizkpContract.getPastEvents('failed',{fromBlock: 'latest', toBlock: 'latest'},
+            function(err, results) { 
+                if(err) {
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+					document.getElementById("showNhideError").innerHTML = "There was error.";
+    				return;
+  			}
+             // Else use the data recieved.
+              // For wrong proof from Contract.
+              for (var {returnValues:{msg: EventMsg}} of results) {
+                console.log('Event Message: ' + EventMsg);   
+                $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                document.getElementById("showNhideError").innerHTML = EventMsg;
+                return;
+            }
+
+        });
+    }
+
+function trackEventPubKeys(userRawPubKey){
+        nizkpContract.getPastEvents('pubKeys',{fromBlock: 'latest', toBlock: 'latest'},
+            function(err, results) { 
+                if(err) {
+                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+					document.getElementById("showNhideError").innerHTML = "An error occured.";
+    				return;
+  			}
+  			// Else use the data recieved.
+            for (var {returnValues:{pubKeyOne: PkOne, pubKeyTwo: PkTwo, pubKeyThree: PkThree, pubKeyFour: PkFour}} of results) {
+                console.log('First Public Key is: ' + PkOne);   
+                getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour);  // This function retrieves the IPFS Public key obj, decryptes and calls another function to update.
+            }
+
+        });
+    }
+
+function reloadPg(){
+        window.setTimeout(function(){
+                            window.location.href = "./NIZKPforSCawait.html";
+                        },1500); // Refresh after 1.5 sec.
+    }
+
+function numberValidation(input) {
+        let count = input.toString().length;
+        if(input=='' || Number(input)==NaN || parseInt(input,16)==NaN || input<0 || isNaN(input)==true || count <=64){
+            return 0;
+        }
+        else {
+            return 1;
+        }
+    }    
+
+    function verify(){
+    console.log("Subtmit Btn clicked")
+    let pubKey = $("#pubKey").val();
+
+    if(numberValidation(pubKey)==1){
+        let txHash = ''
+        let blkNum = ''
+        nizkpContract.methods.AwaitResponse(pubKey).send({
+                    from: web3.eth.defaultAccount,
+                    gas: 270000  // Increasing Gas to 270000 from the 150000 due to introduction of Provable RNG. Benchmark: 35000
+        }).on('transactionHash', (hash)=>{  
+            txHash = hash;
+            console.log("Trans. hash is: ", txHash);
+        }).on('receipt', (receipt)=>{   
+            transReceipt = receipt;
+            blkNum = transReceipt['blockNumber']
+            console.log("Trans. Block Number is: ", blkNum);
+            trackEventMsg();
+            trackEventFailed();
+            trackEventPubKeys(pubKey);        // Check if Public keys from contract are emiited.
+        }).on('error', (error)=>{
+            $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+            document.getElementById("showNhideError").innerHTML = "Sorry. Error occured. Retry again."
+            reloadPg();
+            });
+        // This displays transaction hash and block number as well as other details from 'receipt' if needed.
+    }
+    else{
+        $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+        document.getElementById("showNhideError").innerHTML = "Invalid input."
+        reloadPg();
+        }
+
+    }
+
+function getPubKeysFromIPFS(userRawPubKey,PkOne,PkTwo,PkThree,PkFour){
+    console.log("Get Public Keys activated.")
+
+    let contractPubKeyHashes = [PkOne,PkTwo,PkThree,PkFour];
+
+    if (contractPubKeyHashes[0] == getHash(userRawPubKey)){
+
+    const Myipfs   = new window.Ipfs()
+    const ipfs      = window.IpfsHttpClient('/ip4/127.0.0.1/tcp/5001')
+    Myipfs.on('ready', () => {
+        // Resolve the IPNS name or address before data can be retrieved via cat.
+        ipfs.name.resolve(staticIPNShash, function (err, name) 
+        {
+            if (err){
+                        console.log("IPNS name resolution failed.");
+            }
+            else{
+                    console.log("IPFS equivalent hash is: ", name);
+                    // Get the data.
+
+                    ipfs.cat(name, function(error, DataFromIPFS){
+                    if (error) {
+                        //throw error
+                        console.log("Invalid hash.")
+                        $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                        document.getElementById("showNhideError").innerHTML = "Invalid IPFS hash.";
+                    }
+                    else {  
+                            var IPFSstringedData = DataFromIPFS.toString('utf8')
+                            // Setting the decryption key.
+                            //var secretKey = prompt("Please enter IPFS Data decryption key.", );
+                            var secretKey = 'nizkP?2019SWUSTblockchain_Lab112'
+                            console.log("Verifying Key. Please wait...")
+
+                            // Decrypt it before parsing.
+                            try{
+                            var decryptedBytes  = CryptoJS.AES.decrypt(IPFSstringedData, secretKey);
+
+                            var BytesString = JSON.parse(decryptedBytes.toString(CryptoJS.enc.Utf8));
+                            }
+                            catch(err){
+                                    console.log("Sorry. Wrong decryption key.") // Public key pool at IPFS is empty.
+                                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                    document.getElementById("showNhideError").innerHTML = "Sorry! Wrong decryption key.";
+                                    return;
+                            }
+
+                            if (Object.keys(BytesString).length!=0){
+
+                                console.log("Key successful. Data from IPFS is: ", IPFSstringedData) // This should be same as the unencrypted one sent to IPFS.
+
+                                console.log("Decryption successful. Please wait ...")
+
+                                console.log("Decrypted data is: ", BytesString);
+
+                                // Pass BytesString to pushToIPFS() to be sent back to IPFS.
+                                    
+                                //pushToIPFS(BytesString,userRawPubKey); // Push to IPFS is not needed. Awaiting members have already executed this function.
+                                    
+                                // Display the decrypted Public keys to the user. E.g BytesString.pubKeyRepObj.publicKeys;
+                                let ipfsObjValues = Object.values(BytesString) // These are raw public keys in Array form.
+                                console.log("Array form of IPFS Object is: ", ipfsObjValues)
+                                let ipfsObjHashedValues = []; // These are hashed public keys.
+
+                                for(var i=0; i < ipfsObjValues.length; i++){
+                                    ipfsObjHashedValues[i] = getHash(ipfsObjValues[i])
+                                    }
+                                console.log("Array form of IPFS content hashed is: ", ipfsObjHashedValues)
+
+                                console.log("Contract returned pub. key hashes: ", contractPubKeyHashes)
+                                
+                                // Get the exact array indexes and retrieve the values to be displayed to the user.
+                                // Contract always returns four public keys hence check for matching indexex.
+                                let indexOfValues = []
+                                for(var i=0; i<contractPubKeyHashes.length; i++){
+                                        indexOfValues[i] = ipfsObjHashedValues.indexOf(contractPubKeyHashes[i])
+                                    }
+                                console.log("Indexes to be used is: ", indexOfValues)
+
+                                // Having found the matching indexes, retrieve the raw public keys from the IPFS array.
+                                let locate = [];
+                                for(i=0; i<indexOfValues.length; i++){
+                                        locate[i] = ipfsObjValues[indexOfValues[i]]
+                                    }
+                                console.log("Locate entries are: ", locate)
+
+                                // Display the public keys to the user.
+                                    $("#bottomDIV").show(); // Display the hidden div to accept the comming entries.
+
+                                    $('tbody').append('<tr><td>'+'Key'+'</td><td>'+'Public Key'+'</td></tr>')
+                                    
+                                    $('tbody').append('<tr><td>'+'First'+'</td><td>'+ locate[0] +'</td></tr>')
+                                    $('tbody').append('<tr><td>'+'Second'+'</td><td>'+ locate[1]+'</td></tr>')
+                                    $('tbody').append('<tr><td>'+'Third'+'</td><td>'+ locate[2] +'</td></tr>')
+                                    $('tbody').append('<tr><td>'+'Fouth'+'</td><td>'+ locate[3] +'</td></tr>')
+                                }
+                            else {
+                                    console.log("Sorry. Empty IPFS data.") // Public key pool at IPFS is empty.
+                                    $("#showNhideError").show(); // Display the hidden div to accept the comming entries.
+                                    document.getElementById("showNhideError").innerHTML = "Sorry! No public key with IPFS.";
+                                    return;
+                            }
+                        }
+                    })
+                }
+            })
+        });
+    }
+    else{
+            console.log("Public key and hash mismatch");
+    }
+}
+    </script>
+ </html>
