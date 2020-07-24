@@ -62,11 +62,12 @@ class Blockchain{
 		var month = currentTime.getMonth() + 1
 		var day = currentTime.getDate()
 		var year = currentTime.getFullYear()
-		return day + "/" + month + "/" + year
+		var time = currentTime.getHours() + ':'+ currentTime.getUTCMinutes() + ':' + currentTime.getSeconds()
+		return day + "/" + month + "/" + year + '::' + time
 	}
 
 	createGenesisBlock() {
-		return new Block(0, this.getCurrentDate(), "Genesis Block", "0");
+		return new Block(1, this.getCurrentDate(), "Genesis Block", "0");
 	}
 
 	getLatestBlock() {
@@ -349,38 +350,54 @@ uRawTransactions.push(uTransactionOne, uTransactionTwo)
 for(i=0; i<uRawTransactions.length; i++){
 	userTransDataToSign[i] = uRawTransactions[i].transToSign()
 }
-// Build merkle tree of the two transactions.
+// Build merkle tree of the two transactions. Validate. 
 const leaves = userTransDataToSign.map(x => SHA256(x))
 const mTree = new MerkleTree(leaves, SHA256)
 const mRoot = mTree.getRoot().toString('hex')
 console.log('Total user transactions:', userTransDataToSign.length)
+let counter = 1;
+let tempObj = []
 for(var i=0; i<userTransDataToSign.length; i++){
 	if (userTransDataToSign[i] != 0){
 		// Sign transaction.
-		console.log('Attempting to sign transaction No.:', i+1)
+		console.log('Signing transaction No.:', i+1)
 		let signInstance = new signTransaction(ring[0], L, userTransDataToSign[i], IDevent)
-		let signature = signInstance.genSignature()
-		console.log("**********************************************************************")
-		console.log("Ring Signature generated for modified scheme is: ", signature)
-		console.log("**********************************************************************")
+		let mLwRS = signInstance.genSignature()
+		// console.log("**********************************************************************")
+		// console.log("Ring Signature generated for modified scheme is: ", mLwRS)
+		// console.log("**********************************************************************")
 		// Verify signature is valid.
 		// console.log("verifying signature ===================")
-		let verifyInstance  = new verifySig(signature, L, userTransDataToSign[i], IDevent)
+		let verifyInstance  = new verifySig(mLwRS, L, userTransDataToSign[i], IDevent)
 		let verifySigResult = verifyInstance.verify()
 		// console.log('Verification result: ', verifySigResult)
 		if (verifySigResult === 1){
 			// Display verification success message.
-			console.log("Signature verification successful. Adding transaction to blockchain.")
-			console.log("**********************************************************************")
-			// Add transaction to the blockchain.
-			let transObj = [{Transaction: userTransDataToSign[i], MerkleRoot: mRoot, LwRS: signature}]
-			prvBC.addTransaction(transObj)
-
+			console.log("Signature verification successful.")
+			console.log("********************************")
+			// Create temporary object for this transaction. 
+			tempObj[i] = [userTransDataToSign[i], mLwRS]
+			// Add transactions to pending transactions if they are two.
+			if((counter % 2) === 0 && tempObj.length === 2 && typeof tempObj[tempObj.length-2] !=="undefined"){
+				// Build the Block body.
+				let transObject = {
+									MerkleRoot: mRoot, 
+									BlockBody: {
+												Tx1: tempObj[tempObj.length-2],
+												Tx2: tempObj[i]
+											}
+								}
+				prvBC.addTransaction(transObject)
+				// Reset transObj
+				tempObj.length = 0
+			}
 			// Check number of pending transactions and mine them.
 			// console.log("Total pending transactions: ", prvBC.pendingTransactions.length)
 			// console.log('Starting mining');
+			// console.log('Pending transactions object: ', prvBC.pendingTransactions)
 			if (prvBC.pendingTransactions.length > 0){
 				// There exist pending transactions hence mine them.
+				console.log('Pending transactions found. Mining them now...')
 				for(var x = 0; x < prvBC.pendingTransactions.length; x++){
 					prvBC.minePendingTransactions('0x34567') // Transactions mined. Block reward would be in next mined block.
 				}
@@ -395,6 +412,7 @@ for(var i=0; i<userTransDataToSign.length; i++){
 	} else {
 			console.log('Sorry! Invalid transaction. Transaction aborted.')
 		}
+	counter++
 }
 // Check balance.
 // let userAccBal = prvBC.getBalanceOfAddress('0x34567')
@@ -408,12 +426,14 @@ for(var i=0; i<userTransDataToSign.length; i++){
 console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
 
 // Let's now manipulate the data
-prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
-prvBC.chain[0].hash = SHA256(0 + '23/7/2020' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
+// prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
+// prvBC.chain[0].hash = SHA256(0 + '23/7/2020' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
 // Check our chain again (will now return false)
 // console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid()); // Yes hence outputs false.
-// console.log('Entire chain: ', prvBC.chain[1].transactionData) 
 console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
-console.log('Transaction info: ',prvBC.chain[prvBC.chain.length - 1].transactionData)
-console.log('Signature: ',prvBC.chain[prvBC.chain.length - 1].transactionData.LwRS)
+console.log('Entire block:', prvBC.chain[prvBC.chain.length - 1].transactionData)
+if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block') {
+	// console.log('Merkle root: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].MerkleRoot)
+	console.log('Tx1: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].BlockBody.Tx1)
+}
 // Testing tamper proof nature ends.
