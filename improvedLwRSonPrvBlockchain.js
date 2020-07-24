@@ -6,17 +6,16 @@ const jsSHA = require("./jssha")
 const { MerkleTree } = require('merkletreejs')         
 
 class Transaction {
-	constructor (fromAddress, toAddress, amount, tData) {
-		this.fromAddress = fromAddress;
+	constructor (toAddress, amount, tData) {
 		this.toAddress = toAddress;
 		this.amount = amount;
 		this.tData = tData;
 	}
 
 	transToSign(){
-		if(addressVal(this.fromAddress)===1 && addressVal(this.toAddress)===1){
+		if(addressVal(this.toAddress)===1){
 			if(this.amount >= 1 & this.tData.length >=1){
-				return JSON.stringify({From: this.fromAddress, Amount: this.amount, Data: this.tData, To: this.toAddress})
+				return JSON.stringify({Amount: this.amount, Data: this.tData, To: this.toAddress})
 			} else {
 				return 0
 			}
@@ -341,9 +340,9 @@ let IDevent = 1
 
 let uRawTransactions = []
 let userTransDataToSign = []
-let uTransactionOne = new Transaction('0x1234a', '0x2345a', 10, 'LabTest1')
-let uTransactionTwo = new Transaction('0x1234a', '0x2345b', 15, 'LabTest2')
-// let uTransactionThree = new Transaction('0x1234a', '0x2345c', 25, 'LabTest3')
+let uTransactionOne = new Transaction('0x2345a', 10, 'LabTest1')
+let uTransactionTwo = new Transaction('0x2345b', 15, 'LabTest2')
+// let uTransactionThree = new Transaction('0x2345c', 25, 'LabTest3')
 
 uRawTransactions.push(uTransactionOne, uTransactionTwo)
 
@@ -426,15 +425,15 @@ for(var i=0; i<userTransDataToSign.length; i++){
 console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
 
 // Let's now manipulate the data
-prvBC.chain[0].transactionData = '0x12345' + 10 + 'LabTest' + '0x23456'
-prvBC.chain[0].hash = SHA256(1 + '24/7/2020::17:15:40' + JSON.stringify('0x12345' + 10 + 'LabTest' + '0x23456') + 0).toString()
+prvBC.chain[0].transactionData = '0x23456' + 10 + 'LabTest'
+prvBC.chain[0].hash = SHA256(1 + '24/7/2020::17:15:40' + JSON.stringify('0x23456' + 10 + 'LabTest') + 0).toString()
 // Display information about the blockchain.
 console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
 console.log('Entire block:', prvBC.chain[prvBC.chain.length - 1].transactionData)
-if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block' && prvBC.chain[prvBC.chain.length - 1].transactionData !== '0x1234510LabTest0x23456') {
+if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block' && prvBC.chain[prvBC.chain.length - 1].transactionData !== '0x2345610LabTest') {
 	// console.log('Merkle root: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].MerkleRoot)
 	console.log('Tx1: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].BlockBody.Tx1)
-	console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid() + ': Because of tamper-proof nature.'); // No. hence it outputs false since other blocks have been added. Tamper proof. 
+	// console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid() + ': Because of tamper-proof nature.'); // No. hence it outputs false since other blocks have been added. Tamper proof. 
 } else {
 	console.log("Is the Blockchain valid after tampering attempt? " + prvBC.isChainValid() + ' : Only one block exist hence not tamper-proof.'); // Yes hence outputs True since only one the genesis block exist.
 }
