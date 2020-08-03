@@ -75,7 +75,7 @@ class Blockchain{
 		return this.chain[this.chain.length -1];
 	}
 
-	addTransaction(transaction) {
+	sendTransaction(transaction) {
 		// Validation already done hence proceed.
 		// Push into onto the "pendingTransactions" array
 		this.pendingTransactions.push(transaction);
@@ -416,7 +416,7 @@ for(var i=0; i<userTransDataToSign.length; i++){
 												Tx2: tempObj[i]
 											}
 								}
-				prvBC.addTransaction(transObject)
+				prvBC.sendTransaction(transObject)
 				// Reset transObj
 				tempObj.length = 0
 			}
