@@ -1,4 +1,6 @@
-// A private or local blockchain example for local proof-of-concept of modified LwRS scheme.
+// A private or local blockchain-like example for local proof-of-concept of modified LwRS scheme.
+// Comment line 446 to check double spending protection of the scheme (mLwRS).
+
 const cryptoJS = require("crypto-js")
 const SHA256 = cryptoJS.SHA256
 const BigNumber = require("./bignumber")  
@@ -321,6 +323,20 @@ function addressVal(address){
 		return 0
 	}
 }
+
+function checkKeyImgInDataset(arr, keyImg) {
+	if (typeof arr == 'undefined'){
+		return false
+	}
+	else {
+		for (var i = 0; i < arr.length; i++) {
+			if (arr[i] === keyImg) {
+				return true;
+			}
+		}
+		return false;
+	}
+}
 // Helper functions end.
 
 // Main execution begins. 
@@ -340,6 +356,7 @@ let IDevent = 1
 
 let uRawTransactions = []
 let userTransDataToSign = []
+let keyImgDataset = {keyImgs0:['0']}
 let uTransactionOne = new Transaction('0x2345a', 10, 'LabTest1')
 let uTransactionTwo = new Transaction('0x2345b', 15, 'LabTest2')
 // let uTransactionThree = new Transaction('0x2345c', 25, 'LabTest3')
@@ -365,12 +382,25 @@ for(var i=0; i<userTransDataToSign.length; i++){
 		// console.log("**********************************************************************")
 		// console.log("Ring Signature generated for modified scheme is: ", mLwRS)
 		// console.log("**********************************************************************")
-		// Verify signature is valid.
-		// console.log("verifying signature ===================")
+		// Check double spending by checking existing key images on the IDevent.
+		let keyImgs = 'keyImgs'
+		let keyIndex = keyImgs.concat(IDevent)
+		let doubleSpendResult = checkKeyImgInDataset(keyImgDataset[keyIndex],mLwRS.I)
+		if (doubleSpendResult == true){
+			console.log('Sorry! Double spending detected. Transaction aborted.')
+		}
+		else {
 		let verifyInstance  = new verifySig(mLwRS, L, userTransDataToSign[i], IDevent)
 		let verifySigResult = verifyInstance.verify()
 		// console.log('Verification result: ', verifySigResult)
 		if (verifySigResult === 1){
+			// Store a copy of the key image on the IDevent to check double spending.
+			if (typeof keyImgDataset[keyIndex] == 'undefined'){
+				keyImgDataset[keyIndex] = []
+			}
+			console.log('Adding Key Image (I) to dataset of key images on the IDevent :', IDevent)
+			keyImgDataset[keyIndex].push(mLwRS.I)
+			// console.log('Key Image Dataset is: ', keyImgDataset)
 			// Display verification success message.
 			console.log("Signature verification successful.")
 			console.log("********************************")
@@ -394,7 +424,8 @@ for(var i=0; i<userTransDataToSign.length; i++){
 			// console.log("Total pending transactions: ", prvBC.pendingTransactions.length)
 			// console.log('Starting mining');
 			// console.log('Pending transactions object: ', prvBC.pendingTransactions)
-			if (prvBC.pendingTransactions.length > 0){
+			// console.log('Total pending transactions: ', prvBC.pendingTransactions.length)
+			if (prvBC.pendingTransactions.length >= 1){
 				// There exist pending transactions hence mine them.
 				console.log('Pending transactions found. Mining them now...')
 				for(var x = 0; x < prvBC.pendingTransactions.length; x++){
@@ -402,16 +433,18 @@ for(var i=0; i<userTransDataToSign.length; i++){
 				}
 				// prvBC.minePendingTransactions('0x34567') // Mine again to claim reward.
 			} else {
-				console.log('No pending transaction(s) found.')
+				console.log('Required number of transactions for mining not met.')
 			}
 		} else {
 				console.log("Failed Signature verification. Rejecting transaction.")
 			}
 			// Main execution ends.
+		}
 	} else {
 			console.log('Sorry! Invalid transaction. Transaction aborted.')
 		}
 	counter++
+	IDevent++ // Comment this line to check double spending protection on the same IDevent.
 }
 // Check balance.
 // let userAccBal = prvBC.getBalanceOfAddress('0x34567')
