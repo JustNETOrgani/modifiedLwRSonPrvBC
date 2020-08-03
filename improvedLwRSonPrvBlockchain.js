@@ -17,7 +17,7 @@ class Transaction {
 	transToSign(){
 		if(addressVal(this.toAddress)===1){
 			if(this.amount >= 1 & this.tData.length >=1){
-				return JSON.stringify({Amount: this.amount, Data: this.tData, To: this.toAddress})
+				return JSON.stringify({toAddress: this.toAddress, amount: this.amount, tData: this.tData })
 			} else {
 				return 0
 			}
@@ -461,7 +461,7 @@ console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
 prvBC.chain[0].transactionData = '0x23456' + 10 + 'LabTest'
 prvBC.chain[0].hash = SHA256(1 + '24/7/2020::17:15:40' + JSON.stringify('0x23456' + 10 + 'LabTest') + 0).toString()
 // Display information about the blockchain.
-console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
+console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' , Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + ' , Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp)
 console.log('Entire block:', prvBC.chain[prvBC.chain.length - 1].transactionData)
 if(prvBC.chain[prvBC.chain.length - 1].transactionData !== 'Genesis Block' && prvBC.chain[prvBC.chain.length - 1].transactionData !== '0x2345610LabTest') {
 	// console.log('Merkle root: ',prvBC.chain[prvBC.chain.length - 1].transactionData[0].MerkleRoot)
