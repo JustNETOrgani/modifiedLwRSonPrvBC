@@ -1,5 +1,5 @@
 // A private or local blockchain-like example for local proof-of-concept of modified LwRS scheme.
-// Comment line 446 to check double spending protection of the scheme (mLwRS).
+// Uncomment line 443 to increment IDevent for different transactions on different IDevents.
 
 const cryptoJS = require("crypto-js")
 const SHA256 = cryptoJS.SHA256
@@ -293,12 +293,7 @@ function buildhrjData(h, rj){
 }
 
 function buildpjNjIDeventData(pj, Nj, IDevent){
-    let str = ""
-    str += pj
-    str += "||"
-    str += Nj
-    str += "||"
-    str += IDevent
+    let str = pj + Nj + IDevent
     return str
 }
 
@@ -352,7 +347,6 @@ ring.push(new userKey(0x74eac5db9bac04bdeffbedeb842813b2179893d6985b8ab14efecdc5
 ring.push(new userKey(0x935228b20bdc2349389ade14548ad5542bb16a2df7f3f2e4c293c03319a87125,1))
 // Public key computation and Public Key list for Ring members.
 L = ring.map(user => user.N)
-let IDevent = 1
 
 let uRawTransactions = []
 let userTransDataToSign = []
@@ -371,12 +365,14 @@ const leaves = userTransDataToSign.map(x => SHA256(x))
 const mTree = new MerkleTree(leaves, SHA256)
 const mRoot = mTree.getRoot().toString('hex')
 console.log('Total user transactions:', userTransDataToSign.length)
-let counter = 1;
+let counter = 1
 let tempObj = []
+let IDevent = 1
 for(var i=0; i<userTransDataToSign.length; i++){
 	if (userTransDataToSign[i] != 0){
 		// Sign transaction.
 		console.log('Signing transaction No.:', i+1)
+		console.log('Using IDevent: ', IDevent)
 		let signInstance = new signTransaction(ring[0], L, userTransDataToSign[i], IDevent)
 		let mLwRS = signInstance.genSignature()
 		// console.log("**********************************************************************")
@@ -444,7 +440,7 @@ for(var i=0; i<userTransDataToSign.length; i++){
 			console.log('Sorry! Invalid transaction. Transaction aborted.')
 		}
 	counter++
-	IDevent++ // Comment this line to check double spending protection on the same IDevent.
+	// IDevent++ // Uncomment this line to increment IDevent for different transactions on different IDevents.
 }
 // Check balance.
 // let userAccBal = prvBC.getBalanceOfAddress('0x34567')
