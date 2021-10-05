@@ -1,5 +1,5 @@
 // A private or local blockchain-like example for local proof-of-concept of modified LwRS scheme.
-// Uncomment line 443 to increment IDevent for different transactions on different IDevents.
+// Comment line 443 to increment IDevent for different transactions on different IDevents.
 
 const cryptoJS = require("crypto-js")
 const SHA256 = cryptoJS.SHA256
@@ -440,7 +440,7 @@ for(var i=0; i<userTransDataToSign.length; i++){
 			console.log('Sorry! Invalid transaction. Transaction aborted.')
 		}
 	counter++
-	// IDevent++ // Uncomment this line to increment IDevent for different transactions on different IDevents.
+	IDevent++ // Uncomment this line to increment IDevent for different transactions on different IDevents.
 }
 // Check balance.
 // let userAccBal = prvBC.getBalanceOfAddress('0x34567')
@@ -455,7 +455,7 @@ console.log('Is the Blockchain valid? ' + prvBC.isChainValid());
 
 // Let's now manipulate the data
 prvBC.chain[0].transactionData = '0x23456' + 10 + 'LabTest'
-prvBC.chain[0].hash = SHA256(1 + '24/7/2020::17:15:40' + JSON.stringify('0x23456' + 10 + 'LabTest') + 0).toString()
+prvBC.chain[0].hash = SHA256(1 + '24/7/2021::17:15:40' + JSON.stringify('0x23456' + 10 + 'LabTest') + 0).toString()
 // Display information about the blockchain.
 console.log('Last Block Info =>: Block index:', prvBC.chain[prvBC.chain.length - 1].index + ' , Previous hash: ', prvBC.chain[prvBC.chain.length - 1].previousHash + 
 ' , Timestamp:', prvBC.chain[prvBC.chain.length - 1].timestamp + ' , Nonce: ',prvBC.chain[prvBC.chain.length - 1].nonce + ' , Block hash: ',prvBC.chain[prvBC.chain.length - 1].hash)
